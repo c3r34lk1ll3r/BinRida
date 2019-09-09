@@ -10,7 +10,7 @@ This plugin enables a Binary Ninja user to use **Frida** features to speed up th
 To install this plugin, navigate to your Binary Ninja plugins directory, and run
 
 ```
-git clone https://github.com/bowline90/BinRida/ binrida
+git clone https://github.com/bowline90/BinRida.git
 ```
 
 ## Dependencies:
