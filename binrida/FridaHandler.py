@@ -57,9 +57,9 @@ class FridaHandler(bn.BackgroundTaskThread):
         time.sleep(1)
         bn.log.log_info('Mapping:'+hex(self.base)+' - '+hex(self.end));
         
-        path = bn.user_plugin_path()+'/binrida/binrida/'
+        path = bn.user_plugin_path()+'/BinRida/binrida/'
         if not os.path.isfile(path+'stalker.js'):
-            path = bn.bundle_plugin_path()+'/binrida/binrida/'
+            path = bn.bundle_plugin_path()+'/BinRida/binrida/'
             if not os.pth.isfile(path+'stalker.js'):
                 bn.log.log_error('Javascript code not found!')
                 return
