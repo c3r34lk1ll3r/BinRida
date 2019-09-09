@@ -1,0 +1,14 @@
+{
+	"plugin": {
+		"name": "binrida",
+		"type": ["ui"],
+		"api": "python2",
+		"description": "A plugin that allows to stalk, dump and instrument a process using Frida Stalker functionality.",
+		"longdescription": "This plugin allows to stalk a process using Frida stalker. This will aid the reverse engineering activity highlighting the executed path.\n\nIt is possible to select to spawn a new process or attach to a new one. Also, it is necessary to select a function.",
+		"version": "1",
+		"author": "Andrea Ferraris",
+		"minimumBinaryNinjaVersion": {
+			"dev": "1.0.dev-815"
+		}
+	}
+}
