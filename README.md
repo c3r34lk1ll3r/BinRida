@@ -19,7 +19,7 @@ git clone https://github.com/bowline90/BinRida.git
 
 ## Usage:
 This plugin will add three new commands in the Binary Ninja GUI:
-*`BINRIDA: Dump context of this function`: this command allows to dump various information about the runtime environment. It hooks the selected function and dump the following information:
+* `BINRIDA: Dump context of this function`: this command allows to dump various information about the runtime environment. It hooks the selected function and dump the following information:
   * `Depth`: this value is the recursion of the function;
   * `Callee function`: the callee function and the relative module;
   * `Register`: Value of the register entering (and before leaving) the function;
