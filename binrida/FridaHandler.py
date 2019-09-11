@@ -59,7 +59,7 @@ class FridaHandler(bn.BackgroundTaskThread):
         
         path = bn.user_plugin_path()+'/BinRida/binrida/'
         if not os.path.isfile(path+'stalker.js'):
-            path = bn.bundle_plugin_path()+'/BinRida/binrida/'
+            path = bn.bundled_plugin_path()+'/BinRida/binrida/'
             if not os.pth.isfile(path+'stalker.js'):
                 bn.log.log_error('Javascript code not found!')
                 return
@@ -116,7 +116,7 @@ Interceptor.attach(p, {
             bn.log.log_error('ERROR!  Dump message:\n'+str(message))
     def mappings(self,message,payload):
         appName = self.bnFile.split('/')[-1]
-        print(appName)
+        #print(appName)
         for i in message['payload']:
             i['base'] = int(i['base'],16)
             i['end']  = i['base']+i['size']

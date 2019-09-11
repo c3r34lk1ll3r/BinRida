@@ -26,7 +26,7 @@ import binaryninja as bn
 def colorize(data,color,bv):
     for i in data['blocks']:
         for j in bv.get_basic_blocks_at(i[1]):
-            j.set_auto_highlight(color)
+            j.set_user_highlight(color)
 
 def CreateMarkdownReport(bv,funct,data):
     ## We need a more efficient methods
@@ -38,8 +38,8 @@ def CreateMarkdownReport(bv,funct,data):
     c += '- Attached to **'+str(data['pid'])+'**' if 'pid' in data else '- **New process**'
     c += '\n'
     for i in data['dump']:
-        for j in i['memMaps']:
-            print(str(j))
+        #for j in i['memMaps']:
+            #print(str(j))
         if i['action'] == 'enter':
             c += '\n\n\n## Data entering function\n'
             c += '- Depth: '+str(i['depth'])+'\n'
