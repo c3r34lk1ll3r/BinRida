@@ -35,7 +35,7 @@ This plugin will add three new commands in the Binary Ninja GUI:
 * `BINRIDA: Stalk program execution`: this command allows to _stalk_ the program execution. It highlights the basic block executed, you can execute this command many time with different colors to track the different executed path.
 
 ## Frida settings:
-Eac command will prompt a form for define various settings. There is a _common_ area that specify how connect to process.
+Each command will prompt a form for define various settings. There is a _common_ area that specify how connect to process.
 * `Device`: setting the frida device (`local`, `tcp`, ecc.)
 * `Application`: this is the program that Frida will spawn. The default application is the same opened in Binary Ninja but it is possible to specify another application (for example if you are reversing a shared library). The address are automatic rebased in the new process map.
 * `Command line`: the command line arguments passed (default no one).
