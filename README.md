@@ -1,6 +1,7 @@
 # BinRida (v0.9)
 Author: **Andrea Ferraris**
-_ This plugin allows to stalk, dump and instrument a process using Frida functionalities._
+
+_This plugin allows to stalk, dump and instrument a process using Frida functionalities._
 ## Description:
 This plugin enables a Binary Ninja user to use Frida features to speed up the reverse engineering.
 
