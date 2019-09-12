@@ -50,13 +50,18 @@ class FridaHandler(bn.BackgroundTaskThread):
         maps_script = 'send(Process.enumerateModules())'
         script = process.create_script(maps_script)
         script.on('message', self.mappings)
-        script.load()
+        while True:
+            script.load()
 
-        ## This should be done with a sync mechanism
-        bn.log.log_debug('Waiting 1 seconds for data')
-        time.sleep(1)
-        bn.log.log_info('Mapping:'+hex(self.base)+' - '+hex(self.end));
-        
+            ## This should be done with a sync mechanism
+            bn.log.log_debug('Waiting 1 seconds for data')
+            time.sleep(1)
+            bn.log.log_info('Mapping:'+hex(self.base)+' - '+hex(self.end));
+            if self.base != 0 and self.end != 0:
+                break
+            del self.data['maps'][:]
+            if self.cancelled == True:
+                return
         path = bn.user_plugin_path()+'/BinRida/binrida/'
         if not os.path.isfile(path+'stalker.js'):
             path = bn.bundled_plugin_path()+'/BinRida/binrida/'
@@ -68,6 +73,15 @@ class FridaHandler(bn.BackgroundTaskThread):
         if self.action == 'stalk':
             stalk = open(path+'stalker.js').read()
             callback = self.stalked
+        elif self.action == 'stalk_f':
+            stalk_one = open(path+'f_stalk.js').read()
+            stalk = ""
+            i = 0
+            while i < len(self.data['entry']):
+                stalk += stalk_one+'\n'
+                i+=1
+                break
+            callback = self.instr
         elif self.action == 'dump':
             stalk = open(path+'dumper.js').read()
             callback = self.dump
@@ -78,14 +92,15 @@ Interceptor.attach(p, {
 '''
             stalk += self.data['script']
             stalk += '});'
-
             callback = self.instr
-        if self.data['entry'] >= self.base and self.data['entry'] <= self.end:
-            stalk = stalk.replace('ADDRESS',str(self.data['entry']))
-            self.rebase = False
-        else:
-            stalk = stalk.replace('ADDRESS',str(self.base+self.data['entry']))
-            self.rebase = True
+        for i in self.data['entry']:
+            if i.start >= self.base and i.start <= self.end:
+                stalk = stalk.replace('ADDRESS',str(i.end),0)
+                self.rebase = False
+            else:
+                stalk = stalk.replace('ADDRESS',str(self.base+i.end),1)
+                self.rebase = True
+            break
         bn.log.log_info("Executed instrumentation script:\n"+stalk)
 
         script = process.create_script(stalk)
@@ -94,7 +109,6 @@ Interceptor.attach(p, {
         
         if self.respawn:
             self.data['device'].resume(pid)
-        
         
         ## Waiting the stop
         while True:
@@ -116,7 +130,7 @@ Interceptor.attach(p, {
             bn.log.log_error('ERROR!  Dump message:\n'+str(message))
     def mappings(self,message,payload):
         appName = self.bnFile.split('/')[-1]
-        #print(appName)
+        print(appName)
         for i in message['payload']:
             i['base'] = int(i['base'],16)
             i['end']  = i['base']+i['size']

@@ -25,6 +25,7 @@ import binaryninja as bn
 import binrida as brida
 import sys
 
+bn.PluginCommand.register_for_function('BINRIDA: Stalk function execution', 'Stalk the basic block of this function', brida.start_stalk_f)
 bn.PluginCommand.register('BINRIDA: Stalk program execution', 'Stalk the process with Frida', brida.start_stalking)
 bn.PluginCommand.register_for_function('BINRIDA: Dump context of this function','Dump the context of this function with Frida',brida.start_dump)
 bn.PluginCommand.register_for_address('BINRIDA: Instrument this address','Instrument this address with Frida',brida.start_instrumentation)

@@ -54,6 +54,39 @@ def SettingsGUI(bv,action=None,extra_settings=None):
         settings['cmd']  = cmdLine.result
     return ret,settings
 
+def start_stalk_f(bv,addr):
+    colors      = [bn.HighlightStandardColor.BlueHighlightColor, bn.HighlightStandardColor.CyanHighlightColor, 	bn.HighlightStandardColor.GreenHighlightColor,bn.HighlightStandardColor.MagentaHighlightColor, bn.HighlightStandardColor.OrangeHighlightColor, bn.HighlightStandardColor.RedHighlightColor, bn.HighlightStandardColor.WhiteHighlightColor,bn.HighlightStandardColor.YellowHighlightColor]
+    f_colors    = bn.ChoiceField('Highlight color\t',[ a.name for a in colors])
+    extra_settings = [f_colors]
+    ret,settings = SettingsGUI(bv,'Stalker',extra_settings)
+    if ret:
+        execute = bv.file.original_filename
+        if settings['name'] != "":
+            execute = settings['name']
+        bn.log.log_info('Start \''+execute+' '+settings['cmd']+'\' on '+settings['dev'].id+' device ')
+        data = {}
+        ## Set the device
+        data['device']  = settings['dev']
+        ## Command to spawn
+        data['execute'] = [execute]
+        if settings['cmd'] != "":
+            for i in settings['cmd'].split(' '):
+                data['execute'].append(i)
+        ## Spawning
+        spawn           = True
+        if settings['spawn'] == 1:
+            data['pid'] = settings['pid']
+            spawn = False
+        ## Preparing block
+        data['maps']    = []
+        data['blocks']  = []
+        data['entry']   = addr.basic_blocks 
+        stalker = FridaHandler(data,bv.file.original_filename,spawn,'stalk_f')
+        stalker.start()
+        bn.show_message_box('Frida stalking','Press OK button to terminate stalking')
+        stalker.cancel()
+        stalker.join()
+        colorize(data,colors[f_colors.result],bv)    
 def start_stalking(bv):
     colors      = [bn.HighlightStandardColor.BlueHighlightColor, bn.HighlightStandardColor.CyanHighlightColor, 	bn.HighlightStandardColor.GreenHighlightColor,bn.HighlightStandardColor.MagentaHighlightColor, bn.HighlightStandardColor.OrangeHighlightColor, bn.HighlightStandardColor.RedHighlightColor, bn.HighlightStandardColor.WhiteHighlightColor,bn.HighlightStandardColor.YellowHighlightColor]
     f_colors    = bn.ChoiceField('Highlight color\t',[ a.name for a in colors])
