@@ -25,6 +25,7 @@ import binaryninja as bn
 import frida
 import time
 import os.path
+
 class FridaHandler(bn.BackgroundTaskThread):
     def __init__(self,data,bnFile,spawn,action):
         bn.BackgroundTaskThread.__init__(self, "Stalking with Frida...", True)
@@ -35,15 +36,88 @@ class FridaHandler(bn.BackgroundTaskThread):
         self.respawn    = spawn
         self.bnFile     = bnFile
         self.action     = action
+        self.path = bn.user_plugin_path()+'/BinRida/binrida/'
+        if not os.path.isfile(self.path+'m_stalker.js'):
+            self.path = bn.bundled_plugin_path()+'/BinRida/binrida/'
+            if not os.pth.isfile(self.path+'m_stalker.js'):
+                bn.log.log_error('Javascript code not found!')
+                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), self.path+'stalker.js')
+    ## Rebasing address
+    def rebaser(self,i):
+        if i >= self.base and i <= self.end:
+            reb_addr = str(i)
+            self.rebase = False
+        else:
+            reb_addr = str(self.base + i)
+            self.rebase = True
+        return reb_addr;
+    ## Create script for stalker
+    def stalker(self):
+        script = ""
+        ff = open(self.path+'m_stalker.js').read();
+        scr = ff.split('//CUT HERE');
+        script += scr[0];
+        for func in self.data['functions']:
+            print(func)
+            var_s = scr[1]
+            address = self.rebaser(func[0]);
+            var_s = var_s.replace('ADDRESS',address)
+            vector = "var vector=["
+            for j in func[1]:
+                address = self.rebaser(j)
+                vector += "ptr("+address+"), "
+            vector = vector[:-1] + ']'
+            print(vector);
+            var_s =  var_s.replace('//Change HERE!',vector);
+            script += var_s
+        return script
+    ## Callback functions
+    ## For instrumenting a single instruction
+    def instr(self,message,payload):
+        bn.log.log_info(str(message))
+        bn.log.log_info(str(payload));
+    ## For dumping the function context
+    def dump(self,message,payload):
+        bn.log.log_info("Data Received!")
+        try:
+            self.data['dump'].append(message['payload'])
+        except KeyError as e:
+            bn.log.log_error('ERROR!  Dump message:\n'+str(message))
+    ## Find the mappings
+    def mappings(self,message,payload):
+        appName = self.bnFile.split('/')[-1]
+        print(appName)
+        for i in message['payload']:
+            i['base'] = int(i['base'],16)
+            i['end']  = i['base']+i['size']
+            self.data['maps'].append(i)
+            if i['name'] == appName:
+                self.base = i['base']
+                self.end = i['end']
+    ## For executiong stalking
+    def stalked(self,message,payload):
+        bn.log.log_info('DATA RECEIVED')
+        print(message);
+        try:
+            i = message['payload']
+            addr = int(i,16)
+            if self.rebase:
+                addr = addr - self.base
+            self.data['blocks'].append(addr)    
+        except KeyError as e:
+            bn.log.log_error('ERROR! Dump message\n'+str(message))
+
+    ## Thread
     def run(self):
         ## TODO: Handling frida error
+        ## Spawn or attach to process 
         if self.respawn:
             pid = self.data['device'].spawn(self.data['execute'])
         else:
             pid = self.data['pid']
+        
         bn.log.log_info('Process '+str(self.data['execute'])+' has PID '+str(pid))
         process = self.data['device'].attach(pid)
-
     
         ## I am not sure that there is no other way
         bn.log.log_debug('Retrieving mappings')
@@ -52,7 +126,6 @@ class FridaHandler(bn.BackgroundTaskThread):
         script.on('message', self.mappings)
         while True:
             script.load()
-
             ## This should be done with a sync mechanism
             bn.log.log_debug('Waiting 1 seconds for data')
             time.sleep(1)
@@ -62,48 +135,42 @@ class FridaHandler(bn.BackgroundTaskThread):
             del self.data['maps'][:]
             if self.cancelled == True:
                 return
-        path = bn.user_plugin_path()+'/BinRida/binrida/'
-        if not os.path.isfile(path+'stalker.js'):
-            path = bn.bundled_plugin_path()+'/BinRida/binrida/'
-            if not os.pth.isfile(path+'stalker.js'):
-                bn.log.log_error('Javascript code not found!')
-                return
-
-        #If we want to stalker
+        ## Different function with different script
         if self.action == 'stalk':
-            stalk = open(path+'stalker.js').read()
+            v_script = self.stalker()
             callback = self.stalked
-        elif self.action == 'stalk_f':
-            stalk_one = open(path+'f_stalk.js').read()
-            stalk = ""
-            i = 0
-            while i < len(self.data['entry']):
-                stalk += stalk_one+'\n'
-                i+=1
-                break
-            callback = self.instr
-        elif self.action == 'dump':
-            stalk = open(path+'dumper.js').read()
-            callback = self.dump
-        elif self.action == 'instr':
-            stalk ='''
-var p = ptr('ADDRESS');
-Interceptor.attach(p, {
-'''
-            stalk += self.data['script']
-            stalk += '});'
-            callback = self.instr
-        for i in self.data['entry']:
-            if i.start >= self.base and i.start <= self.end:
-                stalk = stalk.replace('ADDRESS',str(i.end),0)
-                self.rebase = False
-            else:
-                stalk = stalk.replace('ADDRESS',str(self.base+i.end),1)
-                self.rebase = True
-            break
-        bn.log.log_info("Executed instrumentation script:\n"+stalk)
+        
+        #elif self.action == 'stalk_f':
+        #    stalk_one = open(path+'m_stalker.js').read()
+        #    stalk = ""
+        #    i = 0
+        #    while i < len(self.data['entry']):
+        #         stalk += stalk_one+'\n'
+        #        i+=1
+        #        break
+        #    callback = self.instr
+        #elif self.action == 'dump':
+        #    stalk = open(path+'dumper.js').read()
+        #    callback = self.dump
+        #elif self.action == 'instr':
+        #    stalk ='''
+#var p = ptr('ADDRESS');
+#Interceptor.attach(p, {
+#'''
+#            stalk += self.data['script']
+#            stalk += '});'
+#            callback = self.instr
+#        for i in self.data['entry']:
+#            if i.start >= self.base and i.start <= self.end:
+#                stalk = stalk.replace('ADDRESS',str(i.start),0)
+#                self.rebase = False
+#            else:
+#                stalk = stalk.replace('ADDRESS',str(self.base+i.start),1)
+#                self.rebase = True
+#            break
+        bn.log.log_info("Executed instrumentation script:\n"+v_script)
 
-        script = process.create_script(stalk)
+        script = process.create_script(v_script)
         script.on('message',callback)
         script.load()
         
@@ -120,34 +187,3 @@ Interceptor.attach(p, {
         except frida.ProcessNotFoundError:
             bn.log.log_info('Process already finished')
         return
-    def instr(self,message,payload):
-        bn.log.log_info(str(message))
-    def dump(self,message,payload):
-        bn.log.log_info("Data Received!")
-        try:
-            self.data['dump'].append(message['payload'])
-        except KeyError as e:
-            bn.log.log_error('ERROR!  Dump message:\n'+str(message))
-    def mappings(self,message,payload):
-        appName = self.bnFile.split('/')[-1]
-        print(appName)
-        for i in message['payload']:
-            i['base'] = int(i['base'],16)
-            i['end']  = i['base']+i['size']
-            self.data['maps'].append(i)
-            if i['name'] == appName:
-                self.base = i['base']
-                self.end = i['end']
-    def stalked(self,message,payload):
-        bn.log.log_info('DATA RECEIVED')
-        try:
-            for i in message['payload']:
-                i[1] = int(i[1],16)
-                i[2] = int(i[2],16)
-                if i[1] >= self.base and i[2] <= self.end:
-                    if self.rebase:
-                        i[1] = i[1] - self.base
-                        i[2] = i[2] - self.base
-                    self.data['blocks'].append(i)    
-        except KeyError as e:
-            bn.log.log_error('ERROR! Dump message\n'+str(message))

@@ -87,7 +87,8 @@ def start_stalk_f(bv,addr):
         stalker.cancel()
         stalker.join()
         colorize(data,colors[f_colors.result],bv)    
-def start_stalking(bv):
+
+def start_stalking(bv,addr):
     colors      = [bn.HighlightStandardColor.BlueHighlightColor, bn.HighlightStandardColor.CyanHighlightColor, 	bn.HighlightStandardColor.GreenHighlightColor,bn.HighlightStandardColor.MagentaHighlightColor, bn.HighlightStandardColor.OrangeHighlightColor, bn.HighlightStandardColor.RedHighlightColor, bn.HighlightStandardColor.WhiteHighlightColor,bn.HighlightStandardColor.YellowHighlightColor]
     f_colors    = bn.ChoiceField('Highlight color\t',[ a.name for a in colors])
     f_funct     = bn.ChoiceField('Intercept function\t',[a.name for a in bv.functions])
@@ -114,6 +115,7 @@ def start_stalking(bv):
         ## Preparing block
         data['maps']    = []
         data['blocks']  = []
+        data['functions'] = [[addr.start,[a.start for a in addr.basic_blocks[1:]]]]
         data['entry']   = bv.functions[f_funct.result].start
         stalker = FridaHandler(data,bv.file.original_filename,spawn,'stalk')
         stalker.start()

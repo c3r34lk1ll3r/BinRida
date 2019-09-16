@@ -25,7 +25,7 @@ import binaryninja as bn
 
 def colorize(data,color,bv):
     for i in data['blocks']:
-        for j in bv.get_basic_blocks_at(i[1]):
+        for j in bv.get_basic_blocks_at(i):
             j.set_user_highlight(color)
 
 def CreateMarkdownReport(bv,funct,data):
