@@ -115,7 +115,14 @@ def start_stalking(bv,addr):
         ## Preparing block
         data['maps']    = []
         data['blocks']  = []
-        data['functions'] = [[addr.start,[a.start for a in addr.basic_blocks[1:]]]]
+        data['functions'] = []
+        for f in bv.functions:
+            dd = []
+            dd.append(f.start)
+            dd.append(f.basic_blocks[1:])
+
+            data['functions'].append(dd)
+        #data['functions'] = [[addr.start,addr.basic_blocks[1:]]]
         data['entry']   = bv.functions[f_funct.result].start
         stalker = FridaHandler(data,bv.file.original_filename,spawn,'stalk')
         stalker.start()
@@ -184,7 +191,7 @@ def start_instrumentation(bv,address):
             spawn = False
         ## Stalker data
         data['maps'] = []
-        data['entry'] = address
+        data['functions'] = [f[0].start, address] 
         data['script'] = f_script.result
         stalker = FridaHandler(data,bv.file.original_filename,spawn,'instr')
         stalker.start()

@@ -58,19 +58,40 @@ class FridaHandler(bn.BackgroundTaskThread):
         scr = ff.split('//CUT HERE');
         script += scr[0];
         for func in self.data['functions']:
+            if len(func[1]) == 0:
+                continue
             print(func)
             var_s = scr[1]
             address = self.rebaser(func[0]);
             var_s = var_s.replace('ADDRESS',address)
-            vector = "var vector=["
+            br_hooking = "var br_hooking=["
+            #jmp_hooking= "var jmp_hooking=["
             for j in func[1]:
-                address = self.rebaser(j)
-                vector += "ptr("+address+"), "
-            vector = vector[:-1] + ']'
+                address = self.rebaser(j.start)
+                #if j.length >= 16:
+                    ## jmp
+                #    jmp_hooking += "ptr("+address+"),"
+                #else:
+                br_hooking  += "ptr("+address+"),"
+            vector = ""
+            if 'ptr' in br_hooking:
+                vector +=br_hooking[:-1]+']\n'
+            #if 'ptr' in jmp_hooking:
+            #    vector +=jmp_hooking[:-1]+']'
+            if vector == "":
+                vector = "br_hooking = []"
             print(vector);
             var_s =  var_s.replace('//Change HERE!',vector);
-            script += var_s
+            script += var_s + '\n\n'
         return script
+    def instrumentation(self):
+        script = ""
+        ff = open(self.path+'g_instr.js').read();
+        funct = self.rebaser(self.data['functions'][0])
+        base  = self.rebaser(self.data['functions'][1])
+        script = ff.replace("ADDRESS",funct,1).replace("//Change HERE!","var p=ptr(\""+base+'\")')
+        script = script.replace("//INSERT CODE HERE",self.data["script"]);
+        return script;
     ## Callback functions
     ## For instrumenting a single instruction
     def instr(self,message,payload):
@@ -139,7 +160,9 @@ class FridaHandler(bn.BackgroundTaskThread):
         if self.action == 'stalk':
             v_script = self.stalker()
             callback = self.stalked
-        
+        elif self.action == 'instr':
+            v_script = self.instrumentation()
+            callback = self.instr 
         #elif self.action == 'stalk_f':
         #    stalk_one = open(path+'m_stalker.js').read()
         #    stalk = ""

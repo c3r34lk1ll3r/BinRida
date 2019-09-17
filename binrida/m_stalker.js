@@ -15,7 +15,7 @@ function create_stub(add,size,ret_pointer,nat){
         var cw   = new X86Writer(code, {pc:code});
         var x86r = new X86Relocator(add,cw);
         //For now i Want a guard
-        cw.putBreakpoint();
+        //cw.putBreakpoint();
         //Storing the register
         cw.putPushax();
         cw.putCallAddressWithArguments(nat, [add]);
@@ -23,16 +23,51 @@ function create_stub(add,size,ret_pointer,nat){
         
         //Move the previous instructions
         var readed = 0;
-        while (readed <= size){
-            readed += x86r.readOne();
+        while (readed != size){
+            readed = x86r.readOne();
+            console.log(readed+ '--->'+size);
         }
-        x86r.readOne();
+        //x86r.readOne();
         x86r.writeAll();
         cw.putJmpAddress(ret_pointer);
         cw.flush();
     });
     return mem_stub;
 }
+
+Process.setExceptionHandler(function(args){
+console.log(args.type)
+if(args.type == 'breakpoint'){
+    send(args.address);
+    //console.log(b_hooking[args.address])
+    
+    //b_hooking[args.address]();
+    args.context['pc'] = b_hooking[args.address.sub(1)];
+    return true;
+}
+console.log('Indirizzo '+args.address)
+console.log('Indirizzo '+args.address)
+console.log('Indirizzo '+args.address)
+console.log('Indirizzo '+args.address)
+console.log('Indirizzo '+args.address)
+console.log('Indirizzo '+args.address)
+console.log('Indirizzo '+args.address)
+console.log('Indirizzo '+args.address)
+console.log('Indirizzo '+args.address)
+console.log('Indirizzo '+args.address)
+console.log('Indirizzo '+args.address)
+console.log('Indirizzo '+args.address)
+console.log('Indirizzo '+args.address)
+console.log('Indirizzo '+args.address)
+console.log('Indirizzo '+args.address)
+console.log('Indirizzo '+args.address)
+console.log('Indirizzo '+args.address)
+console.log('Indirizzo '+args.address)
+console.log('Indirizzo '+args.address)
+return false
+});
+
+
 var hook_func;
 //CUT HERE
 hook_func = ptr("ADDRESS");
@@ -52,11 +87,12 @@ Interceptor.attach(hook_func, {
         var cw;
         var mem_b;
         send(hook_func);
-        for(index=0;index<vector.length;index++){
-            p = vector[index];
-            if (index < 5){
-                continue;
-            }
+        /*
+        for(index=0;index<jmp_hooking.length;index++){
+            p = jmp_hooking[index];
+            //if (index < 2){
+            //    continue;
+            //}
             console.log("Instrumenting basic block "+p);
             console.log("Computing the space..");
             i = Instruction.parse(p);
@@ -65,77 +101,48 @@ Interceptor.attach(hook_func, {
             while (size<=16) {
                 addr = i.next
                 i = Instruction.parse(addr);
-                if (i.groups[0] == 'branch_relative'){
-                    console.log("STOP RIGHT THERE");
-                    console.log(i);
-                    size = 0
-                    break; 
-                }
-                console.log("!!!!!!!!!!"+i.groups)
-                console.log(i);
                 size+=i.size
             }
-            if (size != 0){
-                addr = i.next
-                ret_pointer = new NativeFunction(addr, "void",[]);
-                this.mem_stub = create_stub(p,size,ret_pointer,onEnter);
-                var mm = this.mem_stub
-                console.log("Patching!");
-                console.log("STUB:"+this.mem_stub);
-            }
-            else{
-                console.log('Patching with illegal instruction');
-                mem_b = Memory.alloc(Process.pageSize);
-                b_hooking[p] = mem_b;
-                //b_hooking[p] = new NativeFunction(mem_b,"void",[]);
-                //b_hooking[p] = Instruction.parse(p);
-                console.log(b_hooking[p]);
-                ret_pointer = p.add(1);
-                Memory.patchCode(mem_b,64,function(code) {
-                    var cw = new X86Writer(code,{pc:code});
-                    var dw = new X86Relocator(p,cw);
-                    dw.readOne();
-                    dw.writeOne();
-                    cw.putJmpAddress(ret_pointer);
-                    cw.flush();
-                });
-            }
+            addr = i.next
+            ret_pointer = new NativeFunction(addr, "void",[]);
+            console.log('RETURN at '+ret_pointer);
+            this.mem_stub = create_stub(p,size,ret_pointer,onEnter);
+
+            var mm = this.mem_stub
+            console.log("Patching!");
+            console.log("STUB:"+this.mem_stub);
+            //i = Instruction.parse(mm);
+            //var inx = 0
+            //var addx = mm;
             Memory.patchCode(p, 64, function(code) {
             cw = new X86Writer(code, {pc: code})
-                if (size !=0){
                     cw.putJmpAddress(mm);
                     cw.flush();
-                }
-                else{
-                    i = Instruction.parse(p)
-                    cw.putU8(254);
-                    cw.putNopPadding(i.size-1);
-                }
             });
-            if (index == 5){ break; } 
+            break;
+        }*/
+        for(index=0;index<br_hooking.length;index++){
+            //break;
+            p = br_hooking[index];
+            console.log("Instrument basic block "+p+" with BREAKPOINT");
+            i = Instruction.parse(p)
+            mem_b = Memory.alloc(Process.pageSize);
+            b_hooking[p] = mem_b;
+            ret_pointer = p.add(1)
+            console.log("Mem stub: "+mem_b+" should return to "+ret_pointer);
+            Memory.patchCode(mem_b, 64, function(code) {
+                var cw = new X86Writer(code, {pc:code});
+                var dw = new X86Relocator(p, cw);
+                dw.readOne();
+                dw.writeOne();
+                cw.putJmpAddress(ret_pointer);
+                cw.flush();
+            });
+            Memory.patchCode(p, 64, function(code) {
+                cw = new X86Writer(code, {pc: code})
+                cw.putBreakpoint(); 
+                cw.putNopPadding(i.size-1);
+            });
         }
-    }});
-Process.setExceptionHandler(function(args){
-console.log(args.type)
-if (args.type == 'breakpoint'){
-    console.log("THIS IS PATCHING");
-    console.log("THIS IS PATCHING");
-    console.log("THIS IS PATCHING");
-    console.log("THIS IS PATCHING");
-    return true
-}
-else if(args.type == 'illegal-instruction'){
-    console.log("Instrument with illegal instruction");
-    send(args.address);
-    //I should execute every fucking instruction!
-    console.log(b_hooking[args.address])
-    //Move instruction
-    //var data = args.context['rbp'].sub(0x8).readU64();
-    
-    //b_hooking[args.address]();
-    args.context['pc'] = b_hooking[args.address];
-    return true;
-}
-console.log('Indirizzo '+args.address)
-return false
+    }
 });
