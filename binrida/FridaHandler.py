@@ -58,15 +58,24 @@ class FridaHandler(bn.BackgroundTaskThread):
         scr = ff.split('//CUT HERE');
         script += scr[0];
         for func in self.data['functions']:
-            if len(func[1]) == 0:
+            if func.symbol.type == bn.SymbolType.ImportedFunctionSymbol:
                 continue
+            s = 0
+            for i in func.basic_blocks:
+                s += i.length
+            if s <= 16:
+                bn.log.log_error('Function '+func.name+' is too little (only '+str(s)+' bytes)')
+                continue
+            if func.name == "_start":
+                continue
+            ## function length
             print(func)
             var_s = scr[1]
-            address = self.rebaser(func[0]);
+            address = self.rebaser(func.start);
             var_s = var_s.replace('ADDRESS',address)
             br_hooking = "var br_hooking=["
             #jmp_hooking= "var jmp_hooking=["
-            for j in func[1]:
+            for j in func.basic_blocks[1:]:
                 address = self.rebaser(j.start)
                 #if j.length >= 16:
                     ## jmp
@@ -79,7 +88,7 @@ class FridaHandler(bn.BackgroundTaskThread):
             #if 'ptr' in jmp_hooking:
             #    vector +=jmp_hooking[:-1]+']'
             if vector == "":
-                vector = "br_hooking = []"
+                vector = "var br_hooking = []"
             print(vector);
             var_s =  var_s.replace('//Change HERE!',vector);
             script += var_s + '\n\n'

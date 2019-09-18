@@ -51,6 +51,8 @@ console.log('Indirizzo '+args.address)
 console.log('Indirizzo '+args.address)
 console.log('Indirizzo '+args.address)
 console.log('Indirizzo '+args.address)
+send(Process.enumerateModules());
+send(b_hooking);
 console.log('Indirizzo '+args.address)
 console.log('Indirizzo '+args.address)
 console.log('Indirizzo '+args.address)
@@ -64,6 +66,7 @@ console.log('Indirizzo '+args.address)
 console.log('Indirizzo '+args.address)
 console.log('Indirizzo '+args.address)
 console.log('Indirizzo '+args.address)
+
 return false
 });
 
@@ -72,6 +75,7 @@ var hook_func;
 //CUT HERE
 hook_func = ptr("ADDRESS");
 var b_hooking = {}
+//try{
 Interceptor.attach(hook_func, {
     onEnter: function(args) {
         //Change HERE!
@@ -86,7 +90,7 @@ Interceptor.attach(hook_func, {
         var ret_pointer;
         var cw;
         var mem_b;
-        send(hook_func);
+        send(ptr("ADDRESS"));
         /*
         for(index=0;index<jmp_hooking.length;index++){
             p = jmp_hooking[index];
@@ -123,6 +127,7 @@ Interceptor.attach(hook_func, {
         }*/
         for(index=0;index<br_hooking.length;index++){
             //break;
+            //if (index < 10){continue;}
             p = br_hooking[index];
             console.log("Instrument basic block "+p+" with BREAKPOINT");
             i = Instruction.parse(p)
@@ -143,6 +148,10 @@ Interceptor.attach(hook_func, {
                 cw.putBreakpoint(); 
                 cw.putNopPadding(i.size-1);
             });
+            //if (index == 11){break;}
         }
     }
 });
+//}catch(err) {
+    //send(err);
+//}
