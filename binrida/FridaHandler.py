@@ -51,6 +51,12 @@ class FridaHandler(bn.BackgroundTaskThread):
             reb_addr = str(self.base + i)
             self.rebase = True
         return reb_addr;
+    def dumper(self):
+        script = ""
+        ff = open(self.path+'dumper.js').read()
+        addr = self.rebaser(self.data['functions'].start);
+        script = ff.replace('ADDRESS',addr);
+        return script
     ## Create script for stalker
     def stalker(self):
         script = ""
@@ -133,22 +139,22 @@ class FridaHandler(bn.BackgroundTaskThread):
             addr = int(i,16)
             if self.rebase:
                 addr = addr - self.base
-            self.data['blocks'].append(addr)    
+            self.data['blocks'].append(addr)
         except KeyError as e:
             bn.log.log_error('ERROR! Dump message\n'+str(message))
 
     ## Thread
     def run(self):
         ## TODO: Handling frida error
-        ## Spawn or attach to process 
+        ## Spawn or attach to process
         if self.respawn:
             pid = self.data['device'].spawn(self.data['execute'])
         else:
             pid = self.data['pid']
-        
+
         bn.log.log_info('Process '+str(self.data['execute'])+' has PID '+str(pid))
         process = self.data['device'].attach(pid)
-    
+
         ## I am not sure that there is no other way
         bn.log.log_debug('Retrieving mappings')
         maps_script = 'send(Process.enumerateModules())'
@@ -171,49 +177,21 @@ class FridaHandler(bn.BackgroundTaskThread):
             callback = self.stalked
         elif self.action == 'instr':
             v_script = self.instrumentation()
-            callback = self.instr 
-        #elif self.action == 'stalk_f':
-        #    stalk_one = open(path+'m_stalker.js').read()
-        #    stalk = ""
-        #    i = 0
-        #    while i < len(self.data['entry']):
-        #         stalk += stalk_one+'\n'
-        #        i+=1
-        #        break
-        #    callback = self.instr
-        #elif self.action == 'dump':
-        #    stalk = open(path+'dumper.js').read()
-        #    callback = self.dump
-        #elif self.action == 'instr':
-        #    stalk ='''
-#var p = ptr('ADDRESS');
-#Interceptor.attach(p, {
-#'''
-#            stalk += self.data['script']
-#            stalk += '});'
-#            callback = self.instr
-#        for i in self.data['entry']:
-#            if i.start >= self.base and i.start <= self.end:
-#                stalk = stalk.replace('ADDRESS',str(i.start),0)
-#                self.rebase = False
-#            else:
-#                stalk = stalk.replace('ADDRESS',str(self.base+i.start),1)
-#                self.rebase = True
-#            break
+            callback = self.instr
+        elif self.action == 'dump':
+            v_script = self.dumper()
+            callback = self.dump
         bn.log.log_info("Executed instrumentation script:\n"+v_script)
-
         script = process.create_script(v_script)
         script.on('message',callback)
         script.load()
-        
         if self.respawn:
             self.data['device'].resume(pid)
-        
         ## Waiting the stop
         while True:
             if self.cancelled == True:
                break
-            time.sleep(1) 
+            time.sleep(1)
         try:
             self.data['device'].kill(pid)
         except frida.ProcessNotFoundError:

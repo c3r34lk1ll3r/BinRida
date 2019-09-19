@@ -1,4 +1,4 @@
-var p = ptr(ADDRESS);
+var p = ptr("ADDRESS");
 
 Interceptor.attach(p, {
   onEnter: function (args) {
@@ -9,13 +9,15 @@ Interceptor.attach(p, {
     data['depth']   = this.depth;
     data['threadId']= this.threadId;
     data['memMaps'] = Process.enumerateRanges('---')
-    send(data)
+    data['arguments'] = "FOR NOW";
+    send(data);
   },
   onLeave: function (result) {
     var data = {}
     data['action']  = 'leave';
     data['memMaps'] = Process.enumerateRanges('---')
     data['context'] = this.context;
+    data['retvalue']='None';
     send(data)
   }
 })
