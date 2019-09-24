@@ -6,13 +6,12 @@ function onEnter(args){
 };
 
 Process.setExceptionHandler(function(args){
-console.log(args.type)
 if(args.type == 'breakpoint'){
-    onEnter(args); 
+    onEnter(args);
     args.context['pc'] = b_hooking[args.address.sub(1)];
     return true;
 }
-console.log('Indirizzo '+args.address)
+console.log(args.type)
 return false
 });
 
@@ -32,23 +31,24 @@ Interceptor.attach(hook_func, {
         var ret_pointer;
         var cw;
         var mem_b;
-        console.log("Instrument basic block "+p+" with BREAKPOINT");
+        var skip = 0;
         i = Instruction.parse(p)
         mem_b = Memory.alloc(Process.pageSize);
         b_hooking[p] = mem_b;
         ret_pointer = p.add(1)
-        console.log("Mem stub: "+mem_b+" should return to "+ret_pointer);
         Memory.patchCode(mem_b, 64, function(code) {
             var cw = new X86Writer(code, {pc:code});
             var dw = new X86Relocator(p, cw);
-            dw.readOne();
-            dw.writeOne();
+            if (skip == 0){
+                dw.readOne();
+                dw.writeOne();
+            }
             cw.putJmpAddress(ret_pointer);
             cw.flush();
         });
         Memory.patchCode(p, 64, function(code) {
             cw = new X86Writer(code, {pc: code})
-            cw.putBreakpoint(); 
+            cw.putBreakpoint();
             cw.putNopPadding(i.size-1);
         });
     }

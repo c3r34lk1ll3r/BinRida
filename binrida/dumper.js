@@ -9,7 +9,9 @@ Interceptor.attach(p, {
     data['depth']   = this.depth;
     data['threadId']= this.threadId;
     data['memMaps'] = Process.enumerateRanges('---')
-    data['arguments'] = "FOR NOW";
+    var v_args = {}
+    //Change HERE
+    data['arguments'] = v_args;
     send(data);
   },
   onLeave: function (result) {
@@ -17,7 +19,7 @@ Interceptor.attach(p, {
     data['action']  = 'leave';
     data['memMaps'] = Process.enumerateRanges('---')
     data['context'] = this.context;
-    data['retvalue']='None';
+    data['retvalue']=result;
     send(data)
   }
 })

@@ -38,8 +38,6 @@ def CreateMarkdownReport(bv,funct,data):
     c += '- Attached to **'+str(data['pid'])+'**' if 'pid' in data else '- **New process**'
     c += '\n'
     for i in data['dump']:
-        #for j in i['memMaps']:
-            #print(str(j))
         if i['action'] == 'enter':
             c += '\n\n\n## Data entering function\n'
             c += '- Depth: '+str(i['depth'])+'\n'
@@ -50,8 +48,15 @@ def CreateMarkdownReport(bv,funct,data):
                     mapped = ' **('+m['name']+')**'
                     break
             c += '- Callee function: '+i['return']+mapped+'\n'
+            if len(i['arguments']) != 0:
+                c += '### Arguments\n'
+                for key in i['arguments']:
+                    c += '#### '+key+'\n'
+                    for j in str(i['arguments'][key]).splitlines():
+                        c += j.strip()+'\n\n'
         else:
             c += '\n\n\n## Data leaving function\n'
+            c += 'Return value: **'+i['retvalue']+'**\n'
         c += '### Context Information\n'
         c += '| Register | Value | Maps to |\n'
         c += '|:--------:|:-----:| -------:|\n'
@@ -67,8 +72,8 @@ def CreateMarkdownReport(bv,funct,data):
             mapped = ""
             for m in data['maps']:
                 if value >= m['base'] and value <= m['end']:
-                    mapped = '**'+m['name']+'**' 
-                    break 
+                    mapped = '**'+m['name']+'**'
+                    break
             c += '| `'+j+'` | **'+ct[j]+'** | '+mapped+' |\n'
         c += "### Memory mappings\n"
         c += "| Path | Base | End  | Protection |\n"
@@ -80,9 +85,7 @@ def CreateMarkdownReport(bv,funct,data):
             c += '**'+m['protection']+'**|\n'
     c += '\n\n\n## Module Mappings\n'
     c += '| Path | Base | End | Name |\n'
-    c += '|----- |:----:|:---:|:----:|\n' 
+    c += '|----- |:----:|:---:|:----:|\n'
     for m in data['maps']:
-        c += '|'+m['path']+'|`'+hex(m['base'])+'`|`'+hex(m['end'])+'`|**'+m['name']+'**|\n' 
-    c += '\n\n\n## Raw data\n'
-    c += str(data['dump']) 
+        c += '|'+m['path']+'|`'+hex(m['base'])+'`|`'+hex(m['end'])+'`|**'+m['name']+'**|\n'
     bv.show_markdown_report('Frida dump',c,"")

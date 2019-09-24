@@ -1,5 +1,5 @@
 '''
-binrida.py - Highlight the executed block using Frida
+binrida.py - Plugin for Frida in Binary Ninja
 
 Copyright (c) 2019 Andrea Ferraris
 
@@ -57,7 +57,7 @@ def SettingsGUI(bv,action=None,extra_settings=None):
 def start_stalking(bv,addr = None):
     colors      = [bn.HighlightStandardColor.BlueHighlightColor, bn.HighlightStandardColor.CyanHighlightColor, 	bn.HighlightStandardColor.GreenHighlightColor,bn.HighlightStandardColor.MagentaHighlightColor, bn.HighlightStandardColor.OrangeHighlightColor, bn.HighlightStandardColor.RedHighlightColor, bn.HighlightStandardColor.WhiteHighlightColor,bn.HighlightStandardColor.YellowHighlightColor]
     f_colors    = bn.ChoiceField('Highlight color\t',[ a.name for a in colors])
-    extra_settings = [f_colors]#, f_funct]
+    extra_settings = [f_colors]
     ret,settings = SettingsGUI(bv,'Stalker',extra_settings)
     if ret:
         execute = bv.file.original_filename
@@ -89,7 +89,13 @@ def start_stalking(bv,addr = None):
         colorize(data,colors[f_colors.result],bv)
 
 def start_dump(bv,funct):
-    ret,settings    = SettingsGUI(bv)
+    extra_settings = []
+    index = 0
+    for i in funct.parameter_vars:
+        f = bn.LabelField('\''+i.name+'\'')
+        extra_settings.append(f);
+    extra_settings.append(bn.MultilineTextField('Dumping data. v_args[NAME] is printed in report'))
+    ret,settings    = SettingsGUI(bv,'Dump function contents',extra_settings)
     if ret:
         execute = bv.file.original_filename
         if settings['name'] != "":
@@ -112,6 +118,7 @@ def start_dump(bv,funct):
         data['dump']    = []
         data['maps']    = []
         data['functions']   = funct
+        data['arguments']    = extra_settings[-1].result
         stalker = FridaHandler(data,bv.file.original_filename,spawn,'dump')
         stalker.start()
         bn.show_message_box('Frida stalking','Press OK button to terminate stalking')
@@ -125,7 +132,6 @@ def start_instrumentation(bv,address):
     f_function  = bn.LabelField('Container function\t'+ f[0].name)
     f_funct     = bn.LabelField('Instrumented instruction\t'+bv.get_disassembly(address))
     f_script    = bn.MultilineTextField("Frida script\t")
-
     extra_settings = [f_function,f_funct,f_script]
     ret,settings = SettingsGUI(bv,'Instrumentation',extra_settings)
     if ret:
