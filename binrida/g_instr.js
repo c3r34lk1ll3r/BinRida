@@ -1,13 +1,13 @@
 //Instrument address
 //CallBack onEnter instruction
 
-function onEnter(args){
+function onEnter(context){
     //INSERT CODE HERE
 };
 
 Process.setExceptionHandler(function(args){
 if(args.type == 'breakpoint'){
-    onEnter(args);
+    onEnter(args.context);
     args.context['pc'] = b_hooking[args.address.sub(1)];
     return true;
 }

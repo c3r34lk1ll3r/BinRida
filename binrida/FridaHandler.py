@@ -1,5 +1,5 @@
 '''
-binrida.py - Plugin for Frida in Binary Ninja
+binrida.py - Stalk,dump and instrumentation with Frida
 
 Copyright (c) 2019 Andrea Ferraris
 
@@ -28,7 +28,7 @@ import os.path
 
 class FridaHandler(bn.BackgroundTaskThread):
     def __init__(self,data,bnFile,spawn,action):
-        bn.BackgroundTaskThread.__init__(self, "Stalking with Frida...", True)
+        bn.BackgroundTaskThread.__init__(self, "Frida running...",True)
         self.data       = data
         self.base       = 0
         self.end        = 0
@@ -90,8 +90,7 @@ class FridaHandler(bn.BackgroundTaskThread):
             script += var_s + '\n\n'
         return script
     def stalked(self,message,payload):
-        bn.log.log_info('DATA RECEIVED')
-        print(message);
+        #bn.log.log_info('DATA RECEIVED')
         try:
             i = message['payload']
             addr = int(i,16)
@@ -120,7 +119,6 @@ class FridaHandler(bn.BackgroundTaskThread):
         ff = open(self.path+'dumper.js').read()
         addr = self.rebaser(self.data['functions'].start);
         script = ff.replace('ADDRESS',addr);
-        ## tagging the argument thanks to bn
         s_args = ""
         index = 0
         for i in self.data['functions'].parameter_vars:
@@ -128,7 +126,7 @@ class FridaHandler(bn.BackgroundTaskThread):
             index += 1
         s_args += self.data['arguments']
         ## For now, user should enter the script for dumping arguments
-        ## TODO:: The parameter_vars should be infered thanks to BN. The problems are the pointer
+        ## TODO:: The parameter_vars should be infered thanks to BN. The problems are the pointers
         script = script.replace('//Change HERE',s_args);
         return script
     ## This could be an idea

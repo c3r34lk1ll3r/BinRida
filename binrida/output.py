@@ -1,5 +1,5 @@
 '''
-binrida.py - Highlight the executed block using Frida
+binrida.py - Stalk,dump and instrumentation with Frida
 
 Copyright (c) 2019 Andrea Ferraris
 
@@ -47,13 +47,15 @@ def CreateMarkdownReport(bv,funct,data):
                 if value >= m['base'] and value <= m['end']:
                     mapped = ' **('+m['name']+')**'
                     break
-            c += '- Callee function: '+i['return']+mapped+'\n'
+            c += '- Callee function: '+i['return']+mapped+'\n\n'
             if len(i['arguments']) != 0:
                 c += '### Arguments\n'
                 for key in i['arguments']:
-                    c += '#### '+key+'\n'
-                    for j in str(i['arguments'][key]).splitlines():
-                        c += j.strip()+'\n\n'
+                    c += '**'+key+'**\n\n'
+                    lines = str(i['arguments'][key]).splitlines()
+                    c += '\t'+lines[0]+'\n'
+                    for j in lines[1:]:
+                        c += '    '+j.strip()+'\n'
         else:
             c += '\n\n\n## Data leaving function\n'
             c += 'Return value: **'+i['retvalue']+'**\n'

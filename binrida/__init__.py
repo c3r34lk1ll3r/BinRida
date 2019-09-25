@@ -1,5 +1,5 @@
 '''
-binrida.py - Plugin for Frida in Binary Ninja
+binrida.py - Stalk,dump and instrumentation with Frida
 
 Copyright (c) 2019 Andrea Ferraris
 
@@ -36,6 +36,7 @@ def SettingsGUI(bv,action=None,extra_settings=None):
     cmdLine     = bn.TextLineField('Command line\t')
     spawn       = bn.ChoiceField('Execution mode\t',['Spawn a new process', 'Attacch to PID'])
     pid         = []
+    ## I don't know if it is usefull or it is a problem... for example, remote attach
     for i in psutil.process_iter(attrs=['pid','name']):
         pid.append(i.info['name']+' ('+str(i.info['pid'])+')')
     f_pid       = bn.ChoiceField('PID\t',pid)
@@ -83,7 +84,7 @@ def start_stalking(bv,addr = None):
         data['functions'] = bv.functions if addr == None else [addr]
         stalker = FridaHandler(data,bv.file.original_filename,spawn,'stalk')
         stalker.start()
-        bn.show_message_box('Frida stalking','Press OK button to terminate stalking')
+        bn.show_message_box('Frida running','Press OK button to terminate.')
         stalker.cancel()
         stalker.join()
         colorize(data,colors[f_colors.result],bv)
@@ -121,7 +122,7 @@ def start_dump(bv,funct):
         data['arguments']    = extra_settings[-1].result
         stalker = FridaHandler(data,bv.file.original_filename,spawn,'dump')
         stalker.start()
-        bn.show_message_box('Frida stalking','Press OK button to terminate stalking')
+        bn.show_message_box('Frida running','Press OK button to terminate.')
         stalker.cancel()
         stalker.join()
         CreateMarkdownReport(bv,funct,data)
@@ -158,6 +159,6 @@ def start_instrumentation(bv,address):
         data['script'] = f_script.result
         stalker = FridaHandler(data,bv.file.original_filename,spawn,'instr')
         stalker.start()
-        bn.show_message_box('Frida stalking','Press OK button to terminate stalking')
+        bn.show_message_box('Frida running','Press OK button to terminate.')
         stalker.cancel()
         stalker.join()
