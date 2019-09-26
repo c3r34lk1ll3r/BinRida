@@ -129,22 +129,6 @@ class FridaHandler(bn.BackgroundTaskThread):
         ## TODO:: The parameter_vars should be infered thanks to BN. The problems are the pointers
         script = script.replace('//Change HERE',s_args);
         return script
-    ## This could be an idea
-    #def args_type(self,var,index):
-    #    tp = ""
-    #    typ = var.type
-        #while True:
-        #    if typ.type_class == bn.TypeClass.PointerTypeClass:
-        #        :
-        #    if typ.type_class == bn.TypeClass.IntegerTypeClass:
-        #    tp = 'args['+str(index)+'].toInt';
-        #    if typ.width == 4L:
-        #        tp += '32()'
-        #    elif typ.width == 8L:
-        #        tp += '64()';
-        #elif typ.type_class == bn.TypeClass.PointerTypeClass:
-        #    tp = "ptr(args["+str(index)+"])"
-    #    return tp
     def dump(self,message,payload):
         bn.log.log_info("data received!")
         try:

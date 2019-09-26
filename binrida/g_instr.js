@@ -7,8 +7,8 @@ function onEnter(context){
 
 Process.setExceptionHandler(function(args){
 if(args.type == 'breakpoint'){
-    onEnter(args.context);
     args.context['pc'] = b_hooking[args.address.sub(1)];
+    onEnter(args.context);
     return true;
 }
 console.log(args.type)
