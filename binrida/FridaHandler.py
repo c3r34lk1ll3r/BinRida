@@ -39,7 +39,7 @@ class FridaHandler(bn.BackgroundTaskThread):
         self.path = bn.user_plugin_path()+'/BinRida/binrida/'
         if not os.path.isfile(self.path+'m_stalker.js'):
             self.path = bn.bundled_plugin_path()+'/BinRida/binrida/'
-            if not os.pth.isfile(self.path+'m_stalker.js'):
+            if not os.path.isfile(self.path+'m_stalker.js'):
                 bn.log.log_error('Javascript code not found!')
                 raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), self.path+'m_stalker.js')
     ## Rebasing address
